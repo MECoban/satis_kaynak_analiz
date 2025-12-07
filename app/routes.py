@@ -246,21 +246,26 @@ def list_campaign_files(campaign_id):
     """Kampanya dosyalarını listele"""
     
     try:
+        campaign = campaign_store.get(campaign_id)
+        if not campaign:
+            return jsonify({'error': 'Kampanya bulunamadı'}), 404
+            
         output_dir = os.path.join(current_app.config['OUTPUT_FOLDER'], 'final', campaign_id)
         
-        if not os.path.exists(output_dir):
-            return jsonify({'files': []})
-        
         files = []
-        for filename in os.listdir(output_dir):
-            filepath = os.path.join(output_dir, filename)
-            files.append({
-                'filename': filename,
-                'size': os.path.getsize(filepath),
-                'created': datetime.fromtimestamp(os.path.getctime(filepath)).isoformat()
-            })
+        if os.path.exists(output_dir):
+            for filename in os.listdir(output_dir):
+                filepath = os.path.join(output_dir, filename)
+                files.append({
+                    'filename': filename,
+                    'size': os.path.getsize(filepath),
+                    'created': datetime.fromtimestamp(os.path.getctime(filepath)).isoformat()
+                })
         
-        return jsonify({'files': files})
+        return jsonify({
+            'status': campaign.status,
+            'files': files
+        })
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
