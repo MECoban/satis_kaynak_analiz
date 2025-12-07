@@ -7,6 +7,7 @@ from flask import Blueprint, render_template, request, jsonify, send_file, curre
 import pandas as pd
 import os
 import uuid
+import json
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
@@ -208,6 +209,19 @@ def analyze_campaign(campaign_id):
         exported_files = create_campaign_export(df_categorized, campaign.name, output_dir)
         
         results['exported_files'] = exported_files
+
+        # Prepare Final Stats for Frontend
+        final_stats = {
+            'total_emails': len(email_list),
+            'match_rate': round(stats4.get('REKLAM (Meta)', {}).get('percentage', 0), 1),
+            **{k: v['count'] for k, v in stats4.items()}
+        }
+        results['final_stats'] = final_stats
+        
+        # Save Results to JSON file
+        results_file = os.path.join(output_dir, 'results.json')
+        with open(results_file, 'w', encoding='utf-8') as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
         
         # Status güncelle
         campaign_store.update_status(campaign_id, 'completed')
@@ -253,8 +267,24 @@ def list_campaign_files(campaign_id):
         output_dir = os.path.join(current_app.config['OUTPUT_FOLDER'], 'final', campaign_id)
         
         files = []
+        validation = None
+        stats = None
+        
         if os.path.exists(output_dir):
+            # Load results.json if exists
+            results_path = os.path.join(output_dir, 'results.json')
+            if os.path.exists(results_path):
+                try:
+                    with open(results_path, 'r', encoding='utf-8') as f:
+                        results = json.load(f)
+                        validation = results.get('validation')
+                        stats = results.get('final_stats')
+                except Exception as e:
+                    print(f"Error reading results.json: {e}")
+
             for filename in os.listdir(output_dir):
+                if filename == 'results.json': continue
+                
                 filepath = os.path.join(output_dir, filename)
                 files.append({
                     'filename': filename,
@@ -264,7 +294,9 @@ def list_campaign_files(campaign_id):
         
         return jsonify({
             'status': campaign.status,
-            'files': files
+            'files': files,
+            'validation': validation,
+            'stats': stats
         })
     
     except Exception as e:
@@ -409,4 +441,3 @@ def update_campaign_data(campaign_id):
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-

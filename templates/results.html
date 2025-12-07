@@ -2,6 +2,85 @@
 
 {% block title %}{{ campaign.name }} - Sonuçlar{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        line-height: 1;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* File List */
+    .file-list-item {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .file-list-item:hover {
+        border-color: #64748b; /* gray-500 as equivalent for var(--primary) if not defined, or use a specific color */
+        background: #f8fafc;
+    }
+
+    .file-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .icon-csv { background: #e0f2fe; color: #0369a1; }
+    .icon-xlsx { background: #dcfce7; color: #15803d; }
+
+    /* Progress Bar Modern */
+    .progress {
+        height: 8px;
+        border-radius: 999px;
+        background-color: #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, #475569 0%, #1e293b 100%); /* gray-600 to gray-800 */
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Header -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
@@ -45,9 +124,9 @@
 </div>
 
 <!-- Results State -->
-<div id="resultsState" style="display:none;" class="animate-fade-in-up">
+<div id="resultsState" style="display:none;">
     
-    <!-- Stats Grid (Populated by JS if stats available) -->
+    <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10" id="statsCards">
         <!-- JavaScript ile doldurulacak -->
     </div>
@@ -71,7 +150,7 @@
         İndirilebilir Dosyalar
     </h5>
     
-    <div id="filesList" class="space-y-4">
+    <div id="filesList">
         <!-- JavaScript ile doldurulacak -->
     </div>
 
@@ -96,29 +175,25 @@ function loadResults() {
     fetch(`/api/campaign/${campaignId}/files`)
     .then(response => response.json())
     .then(data => {
-        // Checking explicitly for completed status
         if (data.status === 'completed') {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('resultsState').style.display = 'block';
             
             renderFiles(data.files);
             
+            // Validation varsa göster
             if(data.validation) {
                 renderValidation(data.validation);
             }
             
+            // Stats varsa göster (backend'den gelmeli, yoksa dosyadan türetiriz)
             if(data.stats) {
                 renderStats(data.stats);
             }
         } else if (data.status === 'error') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Hata',
-                text: 'Analiz sırasında bir hata oluştu.',
-                customClass: { popup: 'rounded-2xl' }
-            });
+            Swal.fire('Hata', 'Analiz sırasında bir hata oluştu.', 'error');
         } else {
-            // Still processing
+            // Hala işleniyor
             setTimeout(loadResults, 2000);
         }
     })
@@ -141,27 +216,27 @@ function renderFiles(files) {
         const badgeClass = isExcel ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-sky-50 text-sky-700 border-sky-100';
 
         const html = `
-        <div class="bg-white border border-gray-100 rounded-xl p-5 hover:border-primary-300 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="flex items-center">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mr-4 ${iconClass}">
+        <div class="file-list-item flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center w-full sm:w-auto">
+                <div class="file-icon ${iconClass.includes('emerald') ? 'icon-xlsx' : 'icon-csv'}">
                     <i class="bi ${isExcel ? 'bi-file-earmark-excel' : 'bi-file-earmark-text'}"></i>
                 </div>
                 <div>
                     <h6 class="font-bold text-gray-900 mb-1">${file.filename}</h6>
-                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 font-medium">
-                        <span class="px-2 py-0.5 rounded border ${badgeClass}">${badgeText}</span>
+                    <div class="flex items-center text-gray-500 text-sm">
+                        <span class="px-2 py-0.5 rounded border ${badgeClass} text-xs mr-2">${badgeText}</span>
                         <span>${formatSize(file.size)}</span>
-                        <span class="text-gray-300">•</span>
-                        <span>${new Date(file.created_at * 1000).toLocaleString()}</span>
+                        <span class="mx-2">•</span>
+                        <span>${new Date(file.created).toLocaleString()}</span>
                     </div>
                 </div>
             </div>
-            <div class="flex w-full sm:w-auto gap-3">
-                <button class="flex-1 sm:flex-none px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg text-sm font-medium transition-colors" onclick="previewFile('${file.filename}')">
-                    <i class="bi bi-eye mr-2"></i>Önizle
+            <div class="flex w-full sm:w-auto gap-2">
+                <button class="flex-1 sm:flex-none px-3 py-1.5 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg text-sm font-medium transition-colors" onclick="previewFile('${file.filename}')">
+                    <i class="bi bi-eye mr-1"></i>Önizle
                 </button>
-                <a href="/api/campaign/${campaignId}/download/${file.filename}" class="flex-1 sm:flex-none px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center">
-                    <i class="bi bi-download mr-2"></i>İndir
+                <a href="/api/campaign/${campaignId}/download/${file.filename}" class="flex-1 sm:flex-none px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center">
+                    <i class="bi bi-download mr-1"></i>İndir
                 </a>
             </div>
         </div>
@@ -175,25 +250,28 @@ function renderValidation(report) {
     let bgClass = 'bg-emerald-50 border-emerald-100';
     let textClass = 'text-emerald-800';
     let icon = 'bi-check-circle-fill text-emerald-500';
+    let messages = ['Tüm kontroller başarıyla tamamlandı.'];
     
-    if (report.status === 'WARNING') { 
+    if (report.status === 'warning') { 
         bgClass = 'bg-amber-50 border-amber-100'; 
         textClass = 'text-amber-800'; 
         icon = 'bi-exclamation-triangle-fill text-amber-500'; 
+        messages = report.warnings || [];
     }
-    if (report.status === 'FAILED') { 
+    if (report.status === 'failed' || report.status === 'error') { 
         bgClass = 'bg-rose-50 border-rose-100'; 
         textClass = 'text-rose-800'; 
         icon = 'bi-x-circle-fill text-rose-500'; 
+        messages = report.errors || [];
     }
 
     let html = `
     <div class="rounded-xl border ${bgClass} p-5 flex items-start gap-4">
         <i class="bi ${icon} text-xl mt-0.5"></i>
         <div>
-            <h6 class="font-bold ${textClass} mb-2">Durum: ${report.status}</h6>
+            <h6 class="font-bold ${textClass} mb-2">Durum: ${report.status.toUpperCase()}</h6>
             <ul class="space-y-1 text-sm ${textClass} opacity-90 list-disc list-inside">
-                ${report.messages.map(msg => `<li>${msg}</li>`).join('')}
+                ${messages.map(msg => `<li>${msg}</li>`).join('')}
             </ul>
         </div>
     </div>
@@ -207,7 +285,7 @@ function renderStats(stats) {
 
     // Helper to create card HTML
     const createCard = (title, value, subtext, colorClass, iconClass) => `
-        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+        <div class="col-span-1 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200">
             <div class="flex items-start justify-between mb-4">
                 <div>
                     <p class="text-sm font-medium text-gray-500 mb-1">${title}</p>
@@ -221,13 +299,6 @@ function renderStats(stats) {
         </div>
     `;
 
-    // Calculate total if not provided or derive other metrics
-    // Assuming stats object has basic counters. Adjust based on actual data structure.
-    // Example expected stats: { total: 100, matched: 60, unmatched: 40, ... }
-    
-    // We'll try to be generic if keys are not known, or hardcode if we know the structure.
-    // Based on previous code, let's assume we want to show: Total Emails, Successfully Categorized, etc.
-    
     let cardsHtml = '';
     
     // Total Processed
@@ -240,11 +311,9 @@ function renderStats(stats) {
         cardsHtml += createCard('Eşleşme Oranı', `%${stats.match_rate}`, 'Başarılı eşleşme yüzdesi', 'bg-emerald-50 text-emerald-600', 'bi-graph-up-arrow');
     }
 
-    // You can add more specific stats here based on what the backend returns
-    // For now, if stats is just a key-value pair, we can iterate
+    // Other stats
     Object.entries(stats).forEach(([key, value]) => {
         if (key !== 'total_emails' && key !== 'match_rate' && typeof value !== 'object') {
-            // Format key for display (e.g., 'total_sales' -> 'Total Sales')
             const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
             cardsHtml += createCard(formattedKey, value, '', 'bg-gray-50 text-gray-600', 'bi-bar-chart');
         }
@@ -256,27 +325,21 @@ function renderStats(stats) {
 // Dosya Önizleme Modalı
 function previewFile(filename) {
     if (filename.endsWith('.xlsx')) {
-        Swal.fire({
-            title: 'Bilgi',
-            text: 'Excel dosyaları önizlenemez, lütfen indirin.',
-            icon: 'info',
-            customClass: { popup: 'rounded-2xl' }
-        });
+        Swal.fire('Bilgi', 'Excel dosyaları önizlenemez, lütfen indirin.', 'info');
         return;
     }
     
     Swal.fire({
         title: 'Yükleniyor...',
-        didOpen: () => Swal.showLoading(),
-        customClass: { popup: 'rounded-2xl' }
+        didOpen: () => Swal.showLoading()
     });
 
-    fetch(`/api/campaign/${campaignId}/preview?file=${filename}`)
+    fetch(`/api/campaign/${campaignId}/preview/${filename}`)
         .then(r => r.json())
         .then(data => {
             if(data.error) throw new Error(data.error);
             
-            // Tailwind Table
+            // Tablo oluştur
             let tableHtml = `
             <div class="overflow-x-auto max-h-[400px] border border-gray-200 rounded-lg">
                 <table class="min-w-full text-left text-sm whitespace-nowrap">
@@ -286,7 +349,7 @@ function previewFile(filename) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
-                        ${data.rows.map(row => `
+                        ${data.data.map(row => `
                             <tr class="hover:bg-gray-50 transition-colors">
                                 ${data.columns.map(col => `<td class="px-4 py-2.5 text-gray-600 border-b border-gray-50">${row[col] === null ? '' : row[col]}</td>`).join('')}
                             </tr>
@@ -300,19 +363,10 @@ function previewFile(filename) {
                 html: tableHtml,
                 width: '90%',
                 showCloseButton: true,
-                confirmButtonText: 'Kapat',
-                customClass: {
-                    popup: 'rounded-2xl',
-                    confirmButton: 'bg-gray-800 text-white rounded-lg px-6 py-2'
-                }
+                confirmButtonText: 'Kapat'
             });
         })
-        .catch(err => Swal.fire({
-            icon: 'error',
-            title: 'Hata',
-            text: err.message,
-            customClass: { popup: 'rounded-2xl' }
-        }));
+        .catch(err => Swal.fire('Hata', err.message, 'error'));
 }
 
 // Sayfa yüklendiğinde

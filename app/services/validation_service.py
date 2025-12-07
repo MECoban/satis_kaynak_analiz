@@ -49,10 +49,10 @@ def validate_analysis(input_file: str, output_df: pd.DataFrame, email_column: st
         
         # 1. Email Sayısı Kontrolü
         print("\n📊 1. Email Sayısı Kontrolü")
-        report['stats']['input_total_rows'] = len(df_input)
-        report['stats']['input_unique_emails'] = len(input_emails)
-        report['stats']['output_emails'] = len(output_emails)
-        report['stats']['duplicates'] = len(df_input) - len(input_emails)
+        report['stats']['input_total_rows'] = int(len(df_input))
+        report['stats']['input_unique_emails'] = int(len(input_emails))
+        report['stats']['output_emails'] = int(len(output_emails))
+        report['stats']['duplicates'] = int(len(df_input) - len(input_emails))
         
         print(f"   ✓ Input toplam satır: {len(df_input)}")
         print(f"   ✓ Input unique email: {len(input_emails)}")
@@ -84,12 +84,12 @@ def validate_analysis(input_file: str, output_df: pd.DataFrame, email_column: st
         # 3. Kategori Dağılımı Kontrolü
         print("\n📊 3. Kategori Dağılımı")
         category_dist = output_df['kategori'].value_counts()
-        report['stats']['categories'] = category_dist.to_dict()
+        report['stats']['categories'] = {k: int(v) for k, v in category_dist.to_dict().items()}
         
         for category, count in category_dist.items():
             percentage = (count / len(output_df)) * 100
             print(f"   • {category}: {count} ({percentage:.1f}%)")
-            report['checks'][f'category_{category}'] = count
+            report['checks'][f'category_{category}'] = int(count)
         
         # 4. UTM Veri Kalitesi Kontrolü
         print("\n📈 4. UTM Veri Kalitesi")
@@ -100,8 +100,8 @@ def validate_analysis(input_file: str, output_df: pd.DataFrame, email_column: st
             null_source = utm_var['utm_source'].isna().sum()
             null_campaign = utm_var['utm_campaign'].isna().sum()
             
-            report['stats']['utm_null_source'] = null_source
-            report['stats']['utm_null_campaign'] = null_campaign
+            report['stats']['utm_null_source'] = int(null_source)
+            report['stats']['utm_null_campaign'] = int(null_campaign)
             
             if null_source > 0:
                 report['warnings'].append(f"{null_source} 'UTM VAR' kaydında utm_source boş")
@@ -121,7 +121,7 @@ def validate_analysis(input_file: str, output_df: pd.DataFrame, email_column: st
         
         if len(meta_ads) > 0:
             null_adset = meta_ads['adset_name'].isna().sum()
-            report['stats']['meta_null_adset'] = null_adset
+            report['stats']['meta_null_adset'] = int(null_adset)
             
             if null_adset > 0:
                 percentage = (null_adset / len(meta_ads)) * 100
