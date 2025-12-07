@@ -201,6 +201,58 @@ function renderValidation(report) {
     container.innerHTML = html;
 }
 
+function renderStats(stats) {
+    const container = document.getElementById('statsCards');
+    if (!stats) return;
+
+    // Helper to create card HTML
+    const createCard = (title, value, subtext, colorClass, iconClass) => `
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 mb-1">${title}</p>
+                    <h3 class="text-2xl font-bold text-gray-900">${value}</h3>
+                </div>
+                <div class="w-10 h-10 rounded-xl ${colorClass} flex items-center justify-center text-lg">
+                    <i class="bi ${iconClass}"></i>
+                </div>
+            </div>
+            ${subtext ? `<p class="text-xs text-gray-400 font-medium">${subtext}</p>` : ''}
+        </div>
+    `;
+
+    // Calculate total if not provided or derive other metrics
+    // Assuming stats object has basic counters. Adjust based on actual data structure.
+    // Example expected stats: { total: 100, matched: 60, unmatched: 40, ... }
+    
+    // We'll try to be generic if keys are not known, or hardcode if we know the structure.
+    // Based on previous code, let's assume we want to show: Total Emails, Successfully Categorized, etc.
+    
+    let cardsHtml = '';
+    
+    // Total Processed
+    if (stats.total_emails !== undefined) {
+        cardsHtml += createCard('Toplam İşlenen', stats.total_emails, 'Analiz edilen toplam e-posta', 'bg-blue-50 text-blue-600', 'bi-envelope');
+    }
+    
+    // Success Rate (if available)
+    if (stats.match_rate !== undefined) {
+        cardsHtml += createCard('Eşleşme Oranı', `%${stats.match_rate}`, 'Başarılı eşleşme yüzdesi', 'bg-emerald-50 text-emerald-600', 'bi-graph-up-arrow');
+    }
+
+    // You can add more specific stats here based on what the backend returns
+    // For now, if stats is just a key-value pair, we can iterate
+    Object.entries(stats).forEach(([key, value]) => {
+        if (key !== 'total_emails' && key !== 'match_rate' && typeof value !== 'object') {
+            // Format key for display (e.g., 'total_sales' -> 'Total Sales')
+            const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            cardsHtml += createCard(formattedKey, value, '', 'bg-gray-50 text-gray-600', 'bi-bar-chart');
+        }
+    });
+
+    container.innerHTML = cardsHtml;
+}
+
 // Dosya Önizleme Modalı
 function previewFile(filename) {
     if (filename.endsWith('.xlsx')) {
