@@ -6,6 +6,13 @@ from dataclasses import dataclass
 from typing import Optional, List
 import json
 import os
+from flask_login import UserMixin
+
+@dataclass
+class User(UserMixin):
+    """Basit kullanıcı modeli"""
+    id: str
+    username: str
 
 @dataclass
 class Campaign:
@@ -99,4 +106,3 @@ class CampaignStore:
         if campaign:
             campaign.status = status
             self.save(campaign)
-

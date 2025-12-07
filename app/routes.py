@@ -3,15 +3,16 @@ Flask Routes
 Ana API endpoints
 """
 
-from flask import Blueprint, render_template, request, jsonify, send_file, current_app
+from flask import Blueprint, render_template, request, jsonify, send_file, current_app, redirect, url_for
 import pandas as pd
 import os
 import uuid
 import json
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from flask_login import login_user, logout_user, login_required, current_user
 
-from app.models import Campaign, CampaignStore, AnalysisResult
+from app.models import Campaign, CampaignStore, AnalysisResult, User
 from app.services.utm_service import collect_utm_data, process_utm_details
 from app.services.reklam_service import enrich_with_ad_details
 from app.services.analysis_service import categorize_customers, split_by_category
@@ -22,7 +23,36 @@ main_bp = Blueprint('main', __name__)
 campaign_store = CampaignStore()
 
 
+@main_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        env_user = os.environ.get('ADMIN_USERNAME', 'admin')
+        env_pass = os.environ.get('ADMIN_PASSWORD', 'admin123')
+        
+        if username == env_user and password == env_pass:
+            user = User(id=username, username=username)
+            login_user(user)
+            return redirect(url_for('main.index'))
+        else:
+            return render_template('login.html', error="Geçersiz kullanıcı adı veya şifre")
+            
+    return render_template('login.html')
+
+@main_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('main.login'))
+
+
 @main_bp.route('/')
+@login_required
 def index():
     """Ana sayfa - Kampanya listesi"""
     campaigns = campaign_store.list_all()
@@ -30,12 +60,14 @@ def index():
 
 
 @main_bp.route('/campaign/new')
+@login_required
 def new_campaign():
     """Yeni kampanya oluşturma sayfası"""
     return render_template('campaign.html')
 
 
 @main_bp.route('/campaign/<campaign_id>')
+@login_required
 def view_campaign(campaign_id):
     """Kampanya detay ve analiz sonuçları"""
     campaign = campaign_store.get(campaign_id)
@@ -46,6 +78,7 @@ def view_campaign(campaign_id):
 
 
 @main_bp.route('/campaign/<campaign_id>/edit')
+@login_required
 def edit_campaign(campaign_id):
     """Kampanya verilerini düzenle"""
     campaign = campaign_store.get(campaign_id)
@@ -56,6 +89,7 @@ def edit_campaign(campaign_id):
 
 
 @main_bp.route('/api/campaign/create', methods=['POST'])
+@login_required
 def create_campaign():
     """
     Yeni kampanya oluştur
@@ -117,6 +151,7 @@ def create_campaign():
 
 
 @main_bp.route('/api/campaign/<campaign_id>/analyze', methods=['POST'])
+@login_required
 def analyze_campaign(campaign_id):
     """
     Kampanya analizini başlat
@@ -256,6 +291,7 @@ def analyze_campaign(campaign_id):
 
 
 @main_bp.route('/api/campaign/<campaign_id>/files')
+@login_required
 def list_campaign_files(campaign_id):
     """Kampanya dosyalarını listele"""
     
@@ -304,6 +340,7 @@ def list_campaign_files(campaign_id):
 
 
 @main_bp.route('/api/campaign/<campaign_id>/download/<filename>')
+@login_required
 def download_file(campaign_id, filename):
     """Dosya indir"""
     
@@ -321,6 +358,7 @@ def download_file(campaign_id, filename):
 
 
 @main_bp.route('/api/campaign/<campaign_id>/preview/<filename>')
+@login_required
 def preview_file(campaign_id, filename):
     """Dosya önizleme (ilk 50 satır)"""
     
@@ -357,6 +395,7 @@ def preview_file(campaign_id, filename):
 
 
 @main_bp.route('/api/campaign/<campaign_id>/data/<step>')
+@login_required
 def get_step_data(campaign_id, step):
     """
     Belirli bir adımın verilerini getir (kullanıcı müdahale için)
@@ -407,6 +446,7 @@ def get_step_data(campaign_id, step):
 
 
 @main_bp.route('/api/campaign/<campaign_id>/update-data', methods=['POST'])
+@login_required
 def update_campaign_data(campaign_id):
     """
     Kampanya verilerini güncelle (kullanıcı müdahalesi)

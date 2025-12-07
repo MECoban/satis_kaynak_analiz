@@ -5,6 +5,11 @@ from flask import Flask
 import os
 import numpy as np
 from flask.json.provider import DefaultJSONProvider
+from flask_login import LoginManager
+from dotenv import load_dotenv
+
+# Load env vars
+load_dotenv()
 
 class NumpyJSONProvider(DefaultJSONProvider):
     """
@@ -39,9 +44,23 @@ def create_app():
     os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
     os.makedirs(os.path.join(app.config['OUTPUT_FOLDER'], 'final'), exist_ok=True)
     
+    # Login Manager Setup
+    login_manager = LoginManager()
+    login_manager.login_view = 'main.login'
+    login_manager.init_app(app)
+    
+    from app.models import User
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        # Env var tabanlı basit auth
+        admin_user = os.environ.get('ADMIN_USERNAME', 'admin')
+        if user_id == admin_user:
+            return User(id=user_id, username=user_id)
+        return None
+    
     # Register blueprints
     from app.routes import main_bp
     app.register_blueprint(main_bp)
     
     return app
-

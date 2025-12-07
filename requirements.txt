@@ -1,6 +1,7 @@
 # Web Framework
 Flask==3.0.0
 Werkzeug==3.0.1
+Flask-Login==0.6.3
 
 # Data Processing
 pandas==2.1.4
@@ -20,4 +21,3 @@ python-dotenv==1.0.0
 
 # Production Server (optional)
 gunicorn==21.2.0
-
