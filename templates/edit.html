@@ -3,88 +3,57 @@
 {% block title %}Veri Düzenle - {{ campaign.name }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="display-6 fw-bold mb-2">
-                <i class="bi bi-pencil-square"></i>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <i class="bi bi-pencil-square text-primary-600"></i>
                 Veri Düzenleme
             </h1>
-            <p class="text-muted mb-0">{{ campaign.name }}</p>
+            <p class="text-gray-500 mt-1 ml-8">{{ campaign.name }}</p>
         </div>
         <div>
-            <a href="/campaign/{{ campaign.id }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Geri
+            <a href="/campaign/{{ campaign.id }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:border-gray-300 hover:shadow-sm transition-all">
+                <i class="bi bi-arrow-left mr-2"></i> Geri
             </a>
         </div>
     </div>
 </div>
 
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i>
-    <strong>Düzenleme Modu:</strong> Tablodan hücrelere çift tıklayarak düzenleyebilirsiniz. 
-    Değişiklikleri kaydetmek için "Kaydet" butonuna tıklayın.
+<div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 flex items-start gap-3 text-blue-800">
+    <i class="bi bi-info-circle-fill text-xl mt-0.5 text-blue-600"></i>
+    <div>
+        <strong class="font-bold">Düzenleme Modu:</strong> Tablodan hücrelere çift tıklayarak düzenleyebilirsiniz. 
+        Değişiklikleri kaydetmek için sağ üstteki "Kaydet" butonuna tıklayın.
+    </div>
 </div>
 
 <!-- Loading -->
-<div id="loadingState" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Yükleniyor...</span>
-    </div>
+<div id="loadingState" class="py-20 text-center">
+    <div class="w-16 h-16 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+    <div class="text-gray-500 font-medium">Veriler Yükleniyor...</div>
 </div>
 
 <!-- Editable Table -->
-<div id="editState" style="display:none;">
-    <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="bi bi-table"></i>
-                Düzenlenebilir Tablo
-                <span class="badge bg-secondary ms-2" id="totalRows">0</span>
-            </h5>
-            <div>
-                <button class="btn btn-success" onclick="saveChanges()">
-                    <i class="bi bi-check-circle"></i> Değişiklikleri Kaydet
-                </button>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover table-bordered" id="editableTable">
-                    <!-- Will be populated dynamically -->
-                </table>
-            </div>
+<div id="editState" style="display:none;" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
+        <h5 class="font-bold text-gray-900 flex items-center gap-2">
+            <i class="bi bi-table text-gray-400"></i>
+            Düzenlenebilir Tablo
+            <span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-xs font-medium" id="totalRows">0</span>
+        </h5>
+        <div>
+            <button class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition-all hover:-translate-y-0.5" onclick="saveChanges()">
+                <i class="bi bi-check-circle mr-2"></i> Değişiklikleri Kaydet
+            </button>
         </div>
     </div>
+    <div class="overflow-x-auto max-h-[600px]">
+        <table class="min-w-full divide-y divide-gray-200" id="editableTable">
+            <!-- Will be populated dynamically -->
+        </table>
+    </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .editable-cell {
-        cursor: pointer;
-        position: relative;
-    }
-    
-    .editable-cell:hover {
-        background-color: #f0f9ff !important;
-    }
-    
-    .cell-editing {
-        background-color: #fff3cd !important;
-    }
-    
-    .cell-modified {
-        background-color: #d1e7dd !important;
-    }
-    
-    .edit-input {
-        width: 100%;
-        border: 2px solid #0d6efd;
-        padding: 4px;
-        font-size: 14px;
-    }
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -107,7 +76,7 @@ function loadData() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Veri yüklenirken hata oluştu: ' + error);
+            Swal.fire('Hata', 'Veri yüklenirken hata oluştu: ' + error, 'error');
         });
 }
 
@@ -119,19 +88,19 @@ function renderTable(data) {
     totalRows.textContent = `${data.data.length} kayıt`;
     
     // Header
-    let html = '<thead class="table-light"><tr><th>#</th>';
+    let html = '<thead class="bg-gray-50 sticky top-0 z-10"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-200">#</th>';
     data.columns.forEach(col => {
-        html += `<th>${col}</th>`;
+        html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-200 whitespace-nowrap">${col}</th>`;
     });
-    html += '</tr></thead><tbody>';
+    html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
     
     // Rows (first 100 for performance)
     data.data.slice(0, 100).forEach((row, rowIndex) => {
-        html += `<tr><td>${rowIndex + 1}</td>`;
+        html += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${rowIndex + 1}</td>`;
         data.columns.forEach((col, colIndex) => {
             const value = row[col] !== null && row[col] !== undefined ? row[col] : '';
             const cellId = `cell_${rowIndex}_${colIndex}`;
-            html += `<td class="editable-cell" id="${cellId}" 
+            html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer relative hover:bg-blue-50 transition-colors border-l border-transparent hover:border-blue-200" id="${cellId}" 
                          ondblclick="editCell(${rowIndex}, ${colIndex}, '${col}')">${value}</td>`;
         });
         html += '</tr>';
@@ -150,13 +119,13 @@ function editCell(rowIndex, colIndex, columnName) {
     // Create input
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'edit-input';
+    input.className = 'w-full px-2 py-1 text-sm border-2 border-primary-500 rounded focus:outline-none shadow-sm';
     input.value = currentValue;
     
     // Replace cell content with input
     cell.innerHTML = '';
     cell.appendChild(input);
-    cell.classList.add('cell-editing');
+    cell.classList.add('bg-yellow-50');
     input.focus();
     input.select();
     
@@ -168,10 +137,10 @@ function editCell(rowIndex, colIndex, columnName) {
             // Update data
             tableData[rowIndex][columnName] = newValue;
             modifiedCells.add(`${rowIndex}_${colIndex}`);
-            cell.classList.add('cell-modified');
-            cell.classList.remove('cell-editing');
+            cell.classList.add('bg-green-50', 'text-green-900');
+            cell.classList.remove('bg-yellow-50');
         } else {
-            cell.classList.remove('cell-editing');
+            cell.classList.remove('bg-yellow-50');
         }
         
         cell.textContent = newValue;
@@ -188,41 +157,56 @@ function editCell(rowIndex, colIndex, columnName) {
 // Save changes
 function saveChanges() {
     if (modifiedCells.size === 0) {
-        alert('Henüz değişiklik yapmadınız.');
+        Swal.fire('Bilgi', 'Henüz değişiklik yapmadınız.', 'info');
         return;
     }
     
-    if (!confirm(`${modifiedCells.size} hücre değişti. Kaydetmek istediğinizden emin misiniz?`)) {
-        return;
-    }
-    
-    // Send updated data to server
-    fetch(`/api/campaign/${campaignId}/update-data`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            data: tableData,
-            modified_count: modifiedCells.size
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ Değişiklikler kaydedildi!');
-            modifiedCells.clear();
-            
-            // Remove modified highlighting
-            document.querySelectorAll('.cell-modified').forEach(cell => {
-                cell.classList.remove('cell-modified');
+    Swal.fire({
+        title: 'Kaydet?',
+        text: `${modifiedCells.size} hücre değiştirildi. Kaydetmek istiyor musunuz?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Evet, Kaydet',
+        cancelButtonText: 'İptal',
+        customClass: { popup: 'rounded-2xl' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Send updated data to server
+            fetch(`/api/campaign/${campaignId}/update-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: tableData,
+                    modified_count: modifiedCells.size
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı',
+                        text: 'Değişiklikler kaydedildi!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                    modifiedCells.clear();
+                    
+                    // Remove modified highlighting
+                    // Reload table to be clean or just remove classes
+                    // For simplicity, reload logic is better but we can just clear classes
+                    loadData(); // Reload to refresh view
+                } else {
+                    Swal.fire('Hata', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Hata', 'Kaydetme hatası: ' + error, 'error');
             });
-        } else {
-            alert('❌ Hata: ' + data.error);
         }
-    })
-    .catch(error => {
-        alert('Kaydetme hatası: ' + error);
     });
 }
 
@@ -230,4 +214,3 @@ function saveChanges() {
 window.addEventListener('load', loadData);
 </script>
 {% endblock %}
-

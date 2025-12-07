@@ -2,112 +2,77 @@
 
 {% block title %}Yeni Kampanya - Satış Kaynak Analizi{% endblock %}
 
-{% block extra_css %}
-<style>
-    .upload-area {
-        border: 2px dashed #e5e7eb;
-        border-radius: 16px;
-        padding: 3rem 2rem;
-        text-align: center;
-        background: #f9fafb;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        position: relative;
-    }
-
-    .upload-area:hover, .upload-area.dragover {
-        border-color: var(--primary);
-        background: #eff6ff;
-    }
-
-    .upload-icon {
-        font-size: 3rem;
-        color: #9ca3af;
-        margin-bottom: 1rem;
-        transition: color 0.2s;
-    }
-
-    .upload-area:hover .upload-icon {
-        color: var(--primary);
-    }
-
-    .file-info {
-        display: none;
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        align-items: center;
-        gap: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark">Yeni Analiz Kampanyası</h2>
-            <p class="text-muted">Müşteri listenizi yükleyin ve analizi başlatın</p>
-        </div>
+<div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Yeni Analiz Kampanyası</h2>
+        <p class="text-gray-500 mt-2">Müşteri listenizi yükleyin ve yapay zeka destekli analizi başlatın.</p>
+    </div>
 
-        <form id="campaignForm" class="needs-validation" novalidate>
+    <!-- Form Card -->
+    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-10">
+        <form id="campaignForm" class="space-y-8" novalidate>
+            
             <!-- Kampanya Adı -->
-            <div class="mb-4">
-                <label class="form-label fw-medium text-dark">Kampanya Adı</label>
-                <input type="text" class="form-control form-control-lg bg-light border-0" 
-                       id="name" required placeholder="Örn: Kasım İndirimleri 2025">
+            <div>
+                <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Kampanya Adı</label>
+                <input type="text" id="name" required 
+                    class="block w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-200 placeholder-gray-400"
+                    placeholder="Örn: Kasım İndirimleri 2025">
             </div>
 
             <!-- Tarih Aralığı -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label class="form-label fw-medium text-dark">Başlangıç Tarihi</label>
-                    <input type="date" class="form-control form-control-lg bg-light border-0" 
-                           id="start_date" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-2">Başlangıç Tarihi</label>
+                    <input type="date" id="start_date" required 
+                        class="block w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-200">
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-medium text-dark">Bitiş Tarihi</label>
-                    <input type="date" class="form-control form-control-lg bg-light border-0" 
-                           id="end_date" required>
+                <div>
+                    <label for="end_date" class="block text-sm font-semibold text-gray-700 mb-2">Bitiş Tarihi</label>
+                    <input type="date" id="end_date" required 
+                        class="block w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-200">
                 </div>
             </div>
 
-            <!-- Modern File Upload -->
-            <div class="mb-5">
-                <label class="form-label fw-medium text-dark mb-3">Müşteri Listesi (CSV)</label>
+            <!-- Upload Area -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Müşteri Listesi (CSV)</label>
                 
-                <div class="upload-area" id="dropZone">
-                    <input type="file" id="fileInput" accept=".csv" required style="display: none;">
+                <div id="dropZone" class="group relative border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-primary-500 hover:bg-primary-50/50 transition-all duration-300 cursor-pointer">
+                    <input type="file" id="fileInput" accept=".csv" required class="hidden">
                     
-                    <div id="uploadPrompt">
-                        <i class="bi bi-cloud-arrow-up upload-icon"></i>
-                        <h5 class="fw-bold text-dark mb-1">CSV dosyasını buraya sürükleyin</h5>
-                        <p class="text-muted small mb-0">veya dosya seçmek için tıklayın</p>
+                    <div id="uploadPrompt" class="transition-all duration-300 group-hover:scale-105">
+                        <div class="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors">
+                            <i class="bi bi-cloud-arrow-up text-3xl"></i>
+                        </div>
+                        <h5 class="text-lg font-bold text-gray-900 mb-1">CSV dosyasını buraya sürükleyin</h5>
+                        <p class="text-sm text-gray-500">veya dosya seçmek için tıklayın</p>
                     </div>
 
-                    <div id="fileInfo" class="file-info">
-                        <i class="bi bi-file-earmark-text-fill text-primary fs-4"></i>
-                        <div class="text-start flex-grow-1">
-                            <div id="fileName" class="fw-medium text-dark">dosya_adi.csv</div>
-                            <small id="fileSize" class="text-muted">0 KB</small>
+                    <div id="fileInfo" class="hidden items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-primary-100 text-primary-600 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-file-earmark-text-fill text-2xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <div id="fileName" class="font-medium text-gray-900 truncate max-w-[200px] md:max-w-xs">dosya.csv</div>
+                                <div id="fileSize" class="text-xs text-gray-500">0 KB</div>
+                            </div>
                         </div>
-                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg py-3" id="submitBtn">
-                    <span class="d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-rocket-takeoff"></i>
-                        Kampanyayı Oluştur
-                    </span>
-                </button>
-            </div>
+            <button type="submit" id="submitBtn" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-lg shadow-primary-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3">
+                <i class="bi bi-rocket-takeoff"></i>
+                <span>Kampanyayı Oluştur</span>
+            </button>
         </form>
     </div>
 </div>
@@ -127,13 +92,13 @@
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropZone.classList.add('dragover');
+        dropZone.classList.add('border-primary-500', 'bg-primary-50/50');
     });
 
     ['dragleave', 'drop'].forEach(event => {
         dropZone.addEventListener(event, (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            dropZone.classList.remove('border-primary-500', 'bg-primary-50/50');
         });
     });
 
@@ -148,18 +113,23 @@
 
     function handleFile(file) {
         if (!file.name.endsWith('.csv')) {
-            Swal.fire('Hata', 'Lütfen sadece .csv uzantılı dosya yükleyin', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Hata',
+                text: 'Lütfen sadece .csv uzantılı dosya yükleyin',
+                customClass: { popup: 'rounded-2xl' }
+            });
             return;
         }
 
-        // Dosya bilgilerini göster
+        // Show info
         fileName.textContent = file.name;
         fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
         
         uploadPrompt.style.display = 'none';
         fileInfo.style.display = 'flex';
         
-        // Input'a dosyayı ata (drop durumunda)
+        // Update input
         if (fileInput.files[0] !== file) {
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
@@ -173,14 +143,27 @@
         
         const file = fileInput.files[0];
         if (!file) {
-            Swal.fire('Eksik Dosya', 'Lütfen bir müşteri listesi (CSV) seçin.', 'warning');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Eksik Dosya',
+                text: 'Lütfen bir müşteri listesi (CSV) seçin.',
+                customClass: { popup: 'rounded-2xl' }
+            });
             return;
         }
 
         const btn = document.getElementById('submitBtn');
         const originalContent = btn.innerHTML;
-        btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Oluşturuluyor...';
+        
         btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Oluşturuluyor...
+        `;
 
         const formData = new FormData();
         formData.append('file', file);
@@ -202,7 +185,8 @@
                     title: 'Başarılı!',
                     text: 'Kampanya oluşturuldu.',
                     timer: 1500,
-                    showConfirmButton: false
+                    showConfirmButton: false,
+                    customClass: { popup: 'rounded-2xl' }
                 }).then(() => {
                     window.location.href = '/';
                 });
@@ -210,9 +194,15 @@
                 throw new Error(data.error || 'Bir hata oluştu');
             }
         } catch (error) {
-            Swal.fire('Hata', error.message, 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Hata',
+                text: error.message,
+                customClass: { popup: 'rounded-2xl' }
+            });
             btn.innerHTML = originalContent;
             btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
         }
     });
 </script>
