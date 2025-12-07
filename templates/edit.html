@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <i class="bi bi-pencil-square text-primary-600"></i>
+                <i class="bi bi-pencil-square text-gray-600"></i>
                 Veri Düzenleme
             </h1>
             <p class="text-gray-500 mt-1 ml-8">{{ campaign.name }}</p>
@@ -30,7 +30,7 @@
 
 <!-- Loading -->
 <div id="loadingState" class="py-20 text-center">
-    <div class="w-16 h-16 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+    <div class="w-16 h-16 border-4 border-gray-100 border-t-gray-800 rounded-full animate-spin mx-auto mb-4"></div>
     <div class="text-gray-500 font-medium">Veriler Yükleniyor...</div>
 </div>
 
@@ -43,7 +43,7 @@
             <span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-xs font-medium" id="totalRows">0</span>
         </h5>
         <div>
-            <button class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition-all hover:-translate-y-0.5" onclick="saveChanges()">
+            <button class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow-sm transition-all hover:-translate-y-0.5" onclick="saveChanges()">
                 <i class="bi bi-check-circle mr-2"></i> Değişiklikleri Kaydet
             </button>
         </div>

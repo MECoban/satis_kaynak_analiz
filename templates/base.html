@@ -18,17 +18,31 @@
                         sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
+                        // Minimalist, modern slate/zinc palette
+                        gray: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        // Sophisticated primary color (Slate/Blue-Gray) - less saturated
                         primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            200: '#bcccdc',
+                            300: '#9fb3c8',
+                            400: '#829ab1',
+                            500: '#627d98',
+                            600: '#486581',
+                            700: '#334e68',
+                            800: '#243b53',
+                            900: '#102a43',
                         }
                     }
                 }
@@ -77,8 +91,8 @@
                 
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/30 transform transition hover:scale-105">
-                        <i class="bi bi-funnel-fill text-lg"></i>
+                    <div class="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white shadow-lg transform transition hover:scale-105">
+                        <i class="bi bi-funnel-fill text-lg text-gray-200"></i>
                     </div>
                     <div class="hidden md:block">
                         <h1 class="text-xl font-bold text-gray-900 tracking-tight leading-none">Satış Kaynak Analizi</h1>

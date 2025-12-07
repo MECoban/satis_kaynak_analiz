@@ -20,9 +20,9 @@
         
         <!-- Status Strip (Left Border) -->
         <div class="absolute left-0 top-0 bottom-0 w-1 
-            {% if campaign.status == 'completed' %}bg-green-500
+            {% if campaign.status == 'completed' %}bg-emerald-500
             {% elif campaign.status == 'processing' %}bg-amber-400
-            {% elif campaign.status == 'error' %}bg-red-500
+            {% elif campaign.status == 'error' %}bg-rose-500
             {% else %}bg-gray-300{% endif %}">
         </div>
 
@@ -30,7 +30,7 @@
             <!-- Header -->
             <div class="flex justify-between items-start mb-4 pl-2">
                 <div>
-                    <h3 class="font-bold text-gray-900 text-lg leading-tight group-hover:text-primary-600 transition-colors">{{ campaign.name }}</h3>
+                    <h3 class="font-bold text-gray-900 text-lg leading-tight group-hover:text-primary-700 transition-colors">{{ campaign.name }}</h3>
                     <div class="flex items-center gap-1.5 mt-1 text-xs text-gray-400 font-mono">
                         <i class="bi bi-fingerprint"></i>
                         <span>{{ campaign.id }}</span>
@@ -39,15 +39,15 @@
                 
                 <!-- Status Badge -->
                 {% if campaign.status == 'completed' %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>Tamamlandı
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Tamamlandı
                     </span>
                 {% elif campaign.status == 'processing' %}
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span>İşleniyor
                     </span>
                 {% elif campaign.status == 'error' %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-100">
                         Hata
                     </span>
                 {% else %}
@@ -73,15 +73,15 @@
         <!-- Actions Footer -->
         <div class="p-4 border-t border-gray-50 bg-gray-50/30 flex gap-2 pl-6">
             {% if campaign.status == 'completed' %}
-                <a href="/campaign/{{ campaign.id }}" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm shadow-green-200">
+                <a href="/campaign/{{ campaign.id }}" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm shadow-emerald-100">
                     <i class="bi bi-file-earmark-spreadsheet mr-2"></i>Sonuçlar
                 </a>
             {% elif campaign.status == 'pending' %}
-                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm shadow-primary-200">
+                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                     <i class="bi bi-play-fill mr-2"></i>Başlat
                 </button>
             {% elif campaign.status == 'error' %}
-                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm shadow-red-200">
+                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="flex-1 inline-flex justify-center items-center px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm shadow-rose-100">
                     <i class="bi bi-arrow-clockwise mr-2"></i>Tekrar Dene
                 </button>
             {% else %}
@@ -90,7 +90,7 @@
                 </button>
             {% endif %}
 
-            <button onclick="deleteCampaign('{{ campaign.id }}')" class="px-3 py-2 bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 rounded-lg transition-all" title="Kampanyayı Sil">
+            <button onclick="deleteCampaign('{{ campaign.id }}')" class="px-3 py-2 bg-white border border-gray-200 text-gray-400 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50 rounded-lg transition-all" title="Kampanyayı Sil">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -106,7 +106,7 @@
     </div>
     <h3 class="text-xl font-bold text-gray-900 mb-2">Henüz kampanya yok</h3>
     <p class="text-gray-500 mb-8 max-w-sm text-center">Analiz yapmak için ilk kampanyanızı oluşturun. Müşteri listenizi yükleyin ve gerisini bize bırakın.</p>
-    <a href="/campaign/new" class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-primary-500/30 hover:-translate-y-1">
+    <a href="/campaign/new" class="inline-flex items-center px-6 py-3 bg-gray-900 hover:bg-black text-white font-semibold rounded-xl transition-all shadow-lg hover:-translate-y-1">
         <i class="bi bi-plus-lg mr-2"></i>
         Yeni Kampanya Oluştur
     </a>

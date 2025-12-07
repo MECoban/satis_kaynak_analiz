@@ -9,7 +9,7 @@
         <div class="flex items-center gap-4 mb-2">
             <h1 class="text-3xl font-bold text-gray-900 tracking-tight">{{ campaign.name }}</h1>
             {% if campaign.status == 'completed' %}
-                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700 border border-green-200">Tamamlandı</span>
+                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">Tamamlandı</span>
             {% else %}
                 <span class="px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-700 border border-amber-200">{{ campaign.status }}</span>
             {% endif %}
@@ -28,15 +28,15 @@
 <div id="loadingState" class="py-20 text-center">
     <div class="relative w-24 h-24 mx-auto mb-8">
         <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-        <div class="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
-        <i class="bi bi-cpu text-3xl text-primary-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+        <div class="absolute inset-0 border-4 border-gray-800 rounded-full border-t-transparent animate-spin"></div>
+        <i class="bi bi-cpu text-3xl text-gray-800 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
     </div>
     
     <h3 class="text-2xl font-bold text-gray-900 mb-2">Analiz Sonuçları Yükleniyor...</h3>
     <p class="text-gray-500 mb-8 max-w-md mx-auto">Veriler işleniyor ve rapor dosyaları hazırlanıyor. Bu işlem veri boyutuna göre birkaç dakika sürebilir.</p>
     
     <div class="w-full max-w-md mx-auto bg-gray-100 rounded-full h-2.5 overflow-hidden">
-        <div class="bg-primary-600 h-2.5 rounded-full animate-progress w-full origin-left-right"></div>
+        <div class="bg-gray-800 h-2.5 rounded-full animate-progress w-full origin-left-right"></div>
     </div>
     <style>
         @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
@@ -65,7 +65,7 @@
 
     <!-- Files Section -->
     <h5 class="font-bold text-gray-900 mb-6 flex items-center text-lg">
-        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+        <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center mr-3">
             <i class="bi bi-cloud-download"></i>
         </div>
         İndirilebilir Dosyalar
@@ -136,9 +136,9 @@ function renderFiles(files) {
 
     files.forEach(file => {
         const isExcel = file.filename.endsWith('.xlsx');
-        const iconClass = isExcel ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+        const iconClass = isExcel ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700';
         const badgeText = isExcel ? 'Excel Raporu' : 'Veri Dosyası';
-        const badgeClass = isExcel ? 'bg-green-50 text-green-700 border-green-100' : 'bg-blue-50 text-blue-700 border-blue-100';
+        const badgeClass = isExcel ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-sky-50 text-sky-700 border-sky-100';
 
         const html = `
         <div class="bg-white border border-gray-100 rounded-xl p-5 hover:border-primary-300 hover:shadow-md transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -160,7 +160,7 @@ function renderFiles(files) {
                 <button class="flex-1 sm:flex-none px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg text-sm font-medium transition-colors" onclick="previewFile('${file.filename}')">
                     <i class="bi bi-eye mr-2"></i>Önizle
                 </button>
-                <a href="/api/campaign/${campaignId}/download/${file.filename}" class="flex-1 sm:flex-none px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center">
+                <a href="/api/campaign/${campaignId}/download/${file.filename}" class="flex-1 sm:flex-none px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center justify-center">
                     <i class="bi bi-download mr-2"></i>İndir
                 </a>
             </div>
@@ -172,9 +172,9 @@ function renderFiles(files) {
 
 function renderValidation(report) {
     const container = document.getElementById('validationReport');
-    let bgClass = 'bg-green-50 border-green-100';
-    let textClass = 'text-green-800';
-    let icon = 'bi-check-circle-fill text-green-500';
+    let bgClass = 'bg-emerald-50 border-emerald-100';
+    let textClass = 'text-emerald-800';
+    let icon = 'bi-check-circle-fill text-emerald-500';
     
     if (report.status === 'WARNING') { 
         bgClass = 'bg-amber-50 border-amber-100'; 
@@ -182,9 +182,9 @@ function renderValidation(report) {
         icon = 'bi-exclamation-triangle-fill text-amber-500'; 
     }
     if (report.status === 'FAILED') { 
-        bgClass = 'bg-red-50 border-red-100'; 
-        textClass = 'text-red-800'; 
-        icon = 'bi-x-circle-fill text-red-500'; 
+        bgClass = 'bg-rose-50 border-rose-100'; 
+        textClass = 'text-rose-800'; 
+        icon = 'bi-x-circle-fill text-rose-500'; 
     }
 
     let html = `
