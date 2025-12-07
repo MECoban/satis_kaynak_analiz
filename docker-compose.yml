@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -8,7 +6,7 @@ services:
     container_name: satis-kaynak-analizi
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "8000:5000"
     environment:
       # Flask Configuration
       - FLASK_ENV=production
