@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Yeni Kampanya - Satış Kaynak Analizi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 2px dashed #e5e7eb;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+        transition: color 0.2s;
+    }
+
+    .upload-area:hover .upload-icon {
+        color: var(--primary);
+    }
+
+    .file-info {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">Yeni Analiz Kampanyası</h2>
+            <p class="text-muted">Müşteri listenizi yükleyin ve analizi başlatın</p>
+        </div>
+
+        <form id="campaignForm" class="needs-validation" novalidate>
+            <!-- Kampanya Adı -->
+            <div class="mb-4">
+                <label class="form-label fw-medium text-dark">Kampanya Adı</label>
+                <input type="text" class="form-control form-control-lg bg-light border-0" 
+                       id="name" required placeholder="Örn: Kasım İndirimleri 2025">
+            </div>
+
+            <!-- Tarih Aralığı -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Başlangıç Tarihi</label>
+                    <input type="date" class="form-control form-control-lg bg-light border-0" 
+                           id="start_date" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Bitiş Tarihi</label>
+                    <input type="date" class="form-control form-control-lg bg-light border-0" 
+                           id="end_date" required>
+                </div>
+            </div>
+
+            <!-- Modern File Upload -->
+            <div class="mb-5">
+                <label class="form-label fw-medium text-dark mb-3">Müşteri Listesi (CSV)</label>
+                
+                <div class="upload-area" id="dropZone">
+                    <input type="file" id="fileInput" accept=".csv" required style="display: none;">
+                    
+                    <div id="uploadPrompt">
+                        <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                        <h5 class="fw-bold text-dark mb-1">CSV dosyasını buraya sürükleyin</h5>
+                        <p class="text-muted small mb-0">veya dosya seçmek için tıklayın</p>
+                    </div>
+
+                    <div id="fileInfo" class="file-info">
+                        <i class="bi bi-file-earmark-text-fill text-primary fs-4"></i>
+                        <div class="text-start flex-grow-1">
+                            <div id="fileName" class="fw-medium text-dark">dosya_adi.csv</div>
+                            <small id="fileSize" class="text-muted">0 KB</small>
+                        </div>
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg py-3" id="submitBtn">
+                    <span class="d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-rocket-takeoff"></i>
+                        Kampanyayı Oluştur
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    // Drag & Drop Events
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    ['dragleave', 'drop'].forEach(event => {
+        dropZone.addEventListener(event, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length) handleFile(files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    function handleFile(file) {
+        if (!file.name.endsWith('.csv')) {
+            Swal.fire('Hata', 'Lütfen sadece .csv uzantılı dosya yükleyin', 'error');
+            return;
+        }
+
+        // Dosya bilgilerini göster
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        
+        uploadPrompt.style.display = 'none';
+        fileInfo.style.display = 'flex';
+        
+        // Input'a dosyayı ata (drop durumunda)
+        if (fileInput.files[0] !== file) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        }
+    }
+
+    // Form Submit
+    document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const file = fileInput.files[0];
+        if (!file) {
+            Swal.fire('Eksik Dosya', 'Lütfen bir müşteri listesi (CSV) seçin.', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Oluşturuluyor...';
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', document.getElementById('name').value);
+        formData.append('start_date', document.getElementById('start_date').value);
+        formData.append('end_date', document.getElementById('end_date').value);
+
+        try {
+            const response = await fetch('/api/campaign/create', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Kampanya oluşturuldu.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/';
+                });
+            } else {
+                throw new Error(data.error || 'Bir hata oluştu');
+            }
+        } catch (error) {
+            Swal.fire('Hata', error.message, 'error');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

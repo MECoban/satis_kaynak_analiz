@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Veri Düzenle - {{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="bi bi-pencil-square"></i>
+                Veri Düzenleme
+            </h1>
+            <p class="text-muted mb-0">{{ campaign.name }}</p>
+        </div>
+        <div>
+            <a href="/campaign/{{ campaign.id }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Geri
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Düzenleme Modu:</strong> Tablodan hücrelere çift tıklayarak düzenleyebilirsiniz. 
+    Değişiklikleri kaydetmek için "Kaydet" butonuna tıklayın.
+</div>
+
+<!-- Loading -->
+<div id="loadingState" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Yükleniyor...</span>
+    </div>
+</div>
+
+<!-- Editable Table -->
+<div id="editState" style="display:none;">
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-table"></i>
+                Düzenlenebilir Tablo
+                <span class="badge bg-secondary ms-2" id="totalRows">0</span>
+            </h5>
+            <div>
+                <button class="btn btn-success" onclick="saveChanges()">
+                    <i class="bi bi-check-circle"></i> Değişiklikleri Kaydet
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover table-bordered" id="editableTable">
+                    <!-- Will be populated dynamically -->
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .editable-cell {
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .editable-cell:hover {
+        background-color: #f0f9ff !important;
+    }
+    
+    .cell-editing {
+        background-color: #fff3cd !important;
+    }
+    
+    .cell-modified {
+        background-color: #d1e7dd !important;
+    }
+    
+    .edit-input {
+        width: 100%;
+        border: 2px solid #0d6efd;
+        padding: 4px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const campaignId = '{{ campaign.id }}';
+let tableData = [];
+let modifiedCells = new Set();
+
+// Load data
+function loadData() {
+    fetch(`/api/campaign/${campaignId}/data/final_analysis`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.data) {
+                tableData = data.data;
+                renderTable(data);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('editState').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Veri yüklenirken hata oluştu: ' + error);
+        });
+}
+
+// Render table
+function renderTable(data) {
+    const table = document.getElementById('editableTable');
+    const totalRows = document.getElementById('totalRows');
+    
+    totalRows.textContent = `${data.data.length} kayıt`;
+    
+    // Header
+    let html = '<thead class="table-light"><tr><th>#</th>';
+    data.columns.forEach(col => {
+        html += `<th>${col}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    
+    // Rows (first 100 for performance)
+    data.data.slice(0, 100).forEach((row, rowIndex) => {
+        html += `<tr><td>${rowIndex + 1}</td>`;
+        data.columns.forEach((col, colIndex) => {
+            const value = row[col] !== null && row[col] !== undefined ? row[col] : '';
+            const cellId = `cell_${rowIndex}_${colIndex}`;
+            html += `<td class="editable-cell" id="${cellId}" 
+                         ondblclick="editCell(${rowIndex}, ${colIndex}, '${col}')">${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+// Edit cell
+function editCell(rowIndex, colIndex, columnName) {
+    const cellId = `cell_${rowIndex}_${colIndex}`;
+    const cell = document.getElementById(cellId);
+    const currentValue = cell.textContent;
+    
+    // Create input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'edit-input';
+    input.value = currentValue;
+    
+    // Replace cell content with input
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    cell.classList.add('cell-editing');
+    input.focus();
+    input.select();
+    
+    // Save on blur or enter
+    function saveEdit() {
+        const newValue = input.value;
+        
+        if (newValue !== currentValue) {
+            // Update data
+            tableData[rowIndex][columnName] = newValue;
+            modifiedCells.add(`${rowIndex}_${colIndex}`);
+            cell.classList.add('cell-modified');
+            cell.classList.remove('cell-editing');
+        } else {
+            cell.classList.remove('cell-editing');
+        }
+        
+        cell.textContent = newValue;
+    }
+    
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            saveEdit();
+        }
+    });
+}
+
+// Save changes
+function saveChanges() {
+    if (modifiedCells.size === 0) {
+        alert('Henüz değişiklik yapmadınız.');
+        return;
+    }
+    
+    if (!confirm(`${modifiedCells.size} hücre değişti. Kaydetmek istediğinizden emin misiniz?`)) {
+        return;
+    }
+    
+    // Send updated data to server
+    fetch(`/api/campaign/${campaignId}/update-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            data: tableData,
+            modified_count: modifiedCells.size
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Değişiklikler kaydedildi!');
+            modifiedCells.clear();
+            
+            // Remove modified highlighting
+            document.querySelectorAll('.cell-modified').forEach(cell => {
+                cell.classList.remove('cell-modified');
+            });
+        } else {
+            alert('❌ Hata: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Kaydetme hatası: ' + error);
+    });
+}
+
+// Load on page load
+window.addEventListener('load', loadData);
+</script>
+{% endblock %}
+

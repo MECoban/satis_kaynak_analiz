@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }} - Sonuçlar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        line-height: 1;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* File List */
+    .file-list-item {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .file-list-item:hover {
+        border-color: var(--primary);
+        background: #f8fafc;
+    }
+
+    .file-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .icon-csv { background: #e0f2fe; color: #0369a1; }
+    .icon-xlsx { background: #dcfce7; color: #15803d; }
+
+    /* Progress Bar Modern */
+    .progress {
+        height: 8px;
+        border-radius: 999px;
+        background-color: #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-start mb-5">
+    <div>
+        <div class="d-flex align-items-center mb-2">
+            <h1 class="fw-bold mb-0 text-dark me-3">{{ campaign.name }}</h1>
+            {% if campaign.status == 'completed' %}
+                <span class="badge bg-success rounded-pill px-3">Tamamlandı</span>
+            {% else %}
+                <span class="badge bg-warning text-dark rounded-pill px-3">{{ campaign.status }}</span>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center text-muted">
+            <i class="bi bi-calendar4-week me-2"></i>
+            <span class="fw-medium">{{ campaign.start_date }} — {{ campaign.end_date }}</span>
+        </div>
+    </div>
+    <div>
+        <a href="/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Listeye Dön
+        </a>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div id="loadingState" class="text-center py-5 my-5">
+    <div class="spinner-grow text-primary mb-4" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h4 class="fw-bold text-dark mb-2">Analiz Sonuçları Yükleniyor...</h4>
+    <p class="text-muted mb-4">Dosyalar hazırlanıyor, lütfen bekleyin.</p>
+    <div style="max-width: 400px; margin: 0 auto;">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Results State -->
+<div id="resultsState" style="display:none;">
+    
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-5" id="statsCards">
+        <!-- JavaScript ile doldurulacak -->
+    </div>
+
+    <!-- Quality Control Report -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4 d-flex align-items-center">
+                <i class="bi bi-shield-check text-primary me-2"></i>
+                Kalite Kontrol Raporu
+            </h5>
+            <div id="validationReport"></div>
+        </div>
+    </div>
+
+    <!-- Files Section -->
+    <h5 class="fw-bold mb-3">
+        <i class="bi bi-cloud-download me-2 text-primary"></i>
+        İndirilebilir Dosyalar
+    </h5>
+    
+    <div id="filesList">
+        <!-- JavaScript ile doldurulacak -->
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const campaignId = "{{ campaign.id }}";
+
+// Helper: Format file size
+function formatSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Load Results
+function loadResults() {
+    fetch(`/api/campaign/${campaignId}/files`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'completed') {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultsState').style.display = 'block';
+            
+            renderFiles(data.files);
+            
+            // Validation varsa göster
+            if(data.validation) {
+                renderValidation(data.validation);
+            }
+            
+            // Stats varsa göster (backend'den gelmeli, yoksa dosyadan türetiriz)
+            if(data.stats) {
+                renderStats(data.stats);
+            }
+        } else if (data.status === 'error') {
+            Swal.fire('Hata', 'Analiz sırasında bir hata oluştu.', 'error');
+        } else {
+            // Hala işleniyor
+            setTimeout(loadResults, 2000);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function renderFiles(files) {
+    const container = document.getElementById('filesList');
+    container.innerHTML = '';
+    
+    if (!files || files.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">Dosya bulunamadı.</div>';
+        return;
+    }
+
+    files.forEach(file => {
+        const isExcel = file.filename.endsWith('.xlsx');
+        const iconClass = isExcel ? 'bi-file-earmark-excel-fill text-success' : 'bi-file-earmark-text-fill text-primary';
+        const bgClass = isExcel ? 'icon-xlsx' : 'icon-csv';
+        const badgeText = isExcel ? 'Excel Raporu' : 'Veri Dosyası';
+
+        const html = `
+        <div class="file-list-item">
+            <div class="d-flex align-items-center">
+                <div class="file-icon ${bgClass}">
+                    <i class="bi ${isExcel ? 'bi-file-earmark-excel' : 'bi-file-earmark-text'}"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">${file.filename}</h6>
+                    <div class="d-flex align-items-center text-muted small">
+                        <span class="badge bg-light text-dark border me-2">${badgeText}</span>
+                        <span>${formatSize(file.size)}</span>
+                        <span class="mx-2">•</span>
+                        <span>${new Date(file.created_at * 1000).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" onclick="previewFile('${file.filename}')">
+                    <i class="bi bi-eye me-1"></i>Önizle
+                </button>
+                <a href="/api/campaign/${campaignId}/download/${file.filename}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-download me-1"></i>İndir
+                </a>
+            </div>
+        </div>
+        `;
+        container.innerHTML += html;
+    });
+}
+
+function renderValidation(report) {
+    const container = document.getElementById('validationReport');
+    let alertClass = 'alert-success';
+    let icon = 'bi-check-circle-fill';
+    
+    if (report.status === 'WARNING') { alertClass = 'alert-warning'; icon = 'bi-exclamation-triangle-fill'; }
+    if (report.status === 'FAILED') { alertClass = 'alert-danger'; icon = 'bi-x-circle-fill'; }
+
+    let html = `
+    <div class="alert ${alertClass} border-0 d-flex align-items-start">
+        <i class="bi ${icon} fs-4 me-3 mt-1"></i>
+        <div>
+            <h6 class="fw-bold mb-2">Durum: ${report.status}</h6>
+            <ul class="mb-0 ps-3">
+                ${report.messages.map(msg => `<li>${msg}</li>`).join('')}
+            </ul>
+        </div>
+    </div>
+    `;
+    container.innerHTML = html;
+}
+
+// Dosya Önizleme Modalı
+function previewFile(filename) {
+    if (filename.endsWith('.xlsx')) {
+        Swal.fire('Bilgi', 'Excel dosyaları önizlenemez, lütfen indirin.', 'info');
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Yükleniyor...',
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch(`/api/campaign/${campaignId}/preview?file=${filename}`)
+        .then(r => r.json())
+        .then(data => {
+            if(data.error) throw new Error(data.error);
+            
+            // Tablo oluştur
+            let tableHtml = '<div class="table-responsive" style="max-height: 400px;"><table class="table table-sm table-bordered table-hover head-fixed">';
+            
+            // Header
+            tableHtml += '<thead class="table-light"><tr>';
+            data.columns.forEach(col => tableHtml += `<th>${col}</th>`);
+            tableHtml += '</tr></thead><tbody>';
+            
+            // Body
+            data.rows.forEach(row => {
+                tableHtml += '<tr>';
+                data.columns.forEach(col => {
+                    let val = row[col] === null ? '' : row[col];
+                    tableHtml += `<td>${val}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody></table></div>';
+
+            Swal.fire({
+                title: filename,
+                html: tableHtml,
+                width: '90%',
+                showCloseButton: true,
+                confirmButtonText: 'Kapat'
+            });
+        })
+        .catch(err => Swal.fire('Hata', err.message, 'error'));
+}
+
+// Sayfa yüklendiğinde
+document.addEventListener('DOMContentLoaded', loadResults);
+</script>
+{% endblock %}

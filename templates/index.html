@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Kampanyalarım - Satış Kaynak Analizi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .campaign-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .campaign-item {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .campaign-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-processing { background: #fef3c7; color: #92400e; }
+    .status-pending { background: #f3f4f6; color: #4b5563; }
+    .status-error { background: #fee2e2; color: #991b1b; }
+
+    .action-btn {
+        width: 100%;
+        margin-top: 0.5rem;
+        border-radius: 8px;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="fw-bold mb-2" style="font-size: 1.75rem; color: #111827;">Kampanyalarım</h1>
+    <p class="text-muted">Geçmiş analizlerinizi görüntüleyin veya yönetin</p>
+</div>
+
+{% if campaigns %}
+<div class="campaign-grid">
+    {% for campaign in campaigns %}
+    <div class="campaign-item p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">{{ campaign.name }}</h5>
+                <small class="text-muted" style="font-size: 0.8rem;">
+                    <i class="bi bi-fingerprint me-1"></i>ID: {{ campaign.id }}
+                </small>
+            </div>
+            
+            {% if campaign.status == 'completed' %}
+                <span class="status-badge status-completed">Tamamlandı</span>
+            {% elif campaign.status == 'processing' %}
+                <span class="status-badge status-processing">İşleniyor</span>
+            {% elif campaign.status == 'error' %}
+                <span class="status-badge status-error">Hata</span>
+            {% else %}
+                <span class="status-badge status-pending">Bekliyor</span>
+            {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="bg-light p-3 rounded-3 mb-4">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-calendar4-week text-primary me-2"></i>
+                <span class="text-dark small fw-medium">{{ campaign.start_date }} → {{ campaign.end_date }}</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <i class="bi bi-clock text-secondary me-2"></i>
+                <span class="text-muted small">{{ campaign.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div>
+            {% if campaign.status == 'completed' %}
+                <a href="/campaign/{{ campaign.id }}" class="btn btn-success text-white action-btn mb-2">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Sonuçları Gör
+                </a>
+            {% elif campaign.status == 'pending' %}
+                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="btn btn-primary action-btn mb-2">
+                    <i class="bi bi-play-fill"></i> Analizi Başlat
+                </button>
+            {% elif campaign.status == 'error' %}
+                <button onclick="analyzeCampaign('{{ campaign.id }}')" class="btn btn-danger action-btn mb-2">
+                    <i class="bi bi-arrow-clockwise"></i> Tekrar Dene
+                </button>
+            {% endif %}
+
+            <button onclick="deleteCampaign('{{ campaign.id }}')" class="btn btn-outline-secondary border-0 bg-light text-muted action-btn hover-danger">
+                <i class="bi bi-trash"></i> Sil
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-folder2-open text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+    </div>
+    <h3 class="fw-bold text-dark mb-2">Henüz kampanya yok</h3>
+    <p class="text-muted mb-4">İlk analizinizi oluşturmak için sağ üstteki butonu kullanın.</p>
+    <a href="/campaign/new" class="btn btn-primary px-4 py-2">
+        <i class="bi bi-plus-lg me-2"></i>Yeni Kampanya Oluştur
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function analyzeCampaign(id) {
+    // UI Update
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Başlatılıyor...';
+    btn.disabled = true;
+
+    fetch(`/api/campaign/${id}/analyze`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Analiz Başlatıldı',
+                text: 'Sistem arkaplanda çalışıyor, sayfa yenileniyor...',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => window.location.reload());
+        } else {
+            throw new Error(data.error || 'Bir hata oluştu');
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Hata',
+            text: error.message
+        });
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function deleteCampaign(campaignId) {
+    Swal.fire({
+        title: 'Emin misiniz?',
+        text: "Bu kampanya kalıcı olarak silinecek!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Evet, Sil',
+        cancelButtonText: 'İptal',
+        reverseButtons: true,
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/campaign/${campaignId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    Swal.fire('Silindi!', '', 'success')
+                    .then(() => window.location.reload());
+                } else {
+                    Swal.fire('Hata', 'Silinemedi', 'error');
+                }
+            });
+        }
+    });
+}
+</script>
+{% endblock %}
